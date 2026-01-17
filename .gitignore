@@ -5,3 +5,7 @@
 xcuserdata/
 DerivedData/
 .swiftpm/
+AppIcon-*.png
+AppIcon.iconset/
+generate_icon.swift
+QuickSnipUploader.app/

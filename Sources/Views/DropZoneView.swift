@@ -7,18 +7,21 @@ struct DropZoneView: View {
     @State private var showFilePicker = false
 
     var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
+        GeometryReader { geometry in
+            VStack(spacing: geometry.size.height < 500 ? 15 : 30) {
+                Spacer()
 
-            // App Icon/Logo
-            Image(systemName: "arrow.up.circle.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.blue.gradient)
-                .symbolEffect(.bounce, value: isDragging)
+                // App Icon/Logo
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: min(80, geometry.size.height * 0.12)))
+                    .foregroundStyle(.blue.gradient)
+                    .symbolEffect(.bounce, value: isDragging)
 
-            Text("Quick Snip Uploader")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                Text("Quick Snip Uploader")
+                    .font(geometry.size.height < 500 ? .title2 : .largeTitle)
+                    .fontWeight(.bold)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
 
             if uploadManager.isUploading {
                 VStack(spacing: 12) {
@@ -31,29 +34,42 @@ struct DropZoneView: View {
                         .foregroundColor(.secondary)
                 }
             } else {
-                VStack(spacing: 16) {
+                VStack(spacing: geometry.size.height < 500 ? 8 : 16) {
                     Text("Drag & Drop an image here")
-                        .font(.title3)
+                        .font(geometry.size.height < 500 ? .body : .title3)
                         .foregroundColor(.primary)
+                        .minimumScaleFactor(0.7)
 
                     Text("or")
                         .foregroundColor(.secondary)
+                        .font(geometry.size.height < 500 ? .caption : .body)
 
-                    HStack(spacing: 16) {
+                    HStack(spacing: geometry.size.width < 500 ? 8 : 16) {
                         Button {
                             pasteFromClipboard()
                         } label: {
-                            Label("Paste (⌘V)", systemImage: "doc.on.clipboard")
+                            if geometry.size.width < 500 {
+                                Label("Paste", systemImage: "doc.on.clipboard")
+                                    .labelStyle(.iconOnly)
+                            } else {
+                                Label("Paste (⌘V)", systemImage: "doc.on.clipboard")
+                            }
                         }
                         .keyboardShortcut("v", modifiers: .command)
 
                         Button {
                             showFilePicker = true
                         } label: {
-                            Label("Browse Files", systemImage: "folder")
+                            if geometry.size.width < 500 {
+                                Label("Browse", systemImage: "folder")
+                                    .labelStyle(.iconOnly)
+                            } else {
+                                Label("Browse Files", systemImage: "folder")
+                            }
                         }
                     }
                     .buttonStyle(.borderedProminent)
+                    .controlSize(geometry.size.height < 500 ? .small : .regular)
                 }
             }
 
@@ -63,26 +79,28 @@ struct DropZoneView: View {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [10]))
                 .foregroundColor(isDragging ? .blue : .gray.opacity(0.3))
-                .frame(height: 200)
+                .frame(height: max(150, min(200, geometry.size.height * 0.3)))
                 .overlay {
-                    VStack {
+                    VStack(spacing: 8) {
                         Image(systemName: isDragging ? "arrow.down.circle.fill" : "photo.on.rectangle")
-                            .font(.system(size: 48))
+                            .font(.system(size: min(48, geometry.size.height * 0.08)))
                             .foregroundColor(isDragging ? .blue : .gray)
 
                         Text(isDragging ? "Drop to upload" : "Drop images here")
+                            .font(geometry.size.height < 500 ? .caption : .body)
                             .foregroundColor(isDragging ? .blue : .gray)
                     }
                 }
-                .padding(.horizontal, 40)
+                .padding(.horizontal, max(20, min(40, geometry.size.width * 0.08)))
                 .onDrop(of: [.fileURL, .image], isTargeted: $isDragging) { providers in
                     handleDrop(providers: providers)
                     return true
                 }
 
             Spacer()
+            }
+            .padding()
         }
-        .padding()
         .fileImporter(
             isPresented: $showFilePicker,
             allowedContentTypes: [.image],
